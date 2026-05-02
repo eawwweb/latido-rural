@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Latido Rural — Fotografía</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="brand">
+        <a href="/" class="logo" aria-label="Latido Rural">
+          <img src="/assets/images/logotipo.png" alt="Latido Rural" class="logo-img">
+        </a>
+        <p class="tagline">Capturando raíces, historias y territorio</p>
+      </div>
+      <button id="nav-toggle" class="nav-toggle" aria-label="Abrir menú">☰</button>
+      <nav class="main-nav" id="main-nav">
+        <a href="#home">Inicio</a>
+        <a href="#about">Sobre nosotros</a>
+        <a href="#services">Servicios</a>
+        <a href="#portfolio">Portafolio</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section id="home" class="hero">
+      <div class="slider" data-slider>
+        <div class="slide" data-title="Latido Rural" data-sub="Fotografía cultural y documental con alma local"></div>
+        <div class="slide" data-title="Retratos con historia" data-sub="Rostros y voces del campo"></div>
+        <div class="slide" data-title="Paisajes que laten" data-sub="Territorio, color y tradición"></div>
+        <button class="slider-prev" data-prev aria-label="Anterior">&lt;</button>
+        <button class="slider-next" data-next aria-label="Siguiente">&gt;</button>
+      </div>
+    </section>
+
+    <section id="about" class="about container">
+      <h2>Sobre nosotros</h2>
+      <div class="about-grid">
+        <div class="about-text">
+          <p>Latido Rural nace para contar historias visuales del territorio. Somos un colectivo de fotógrafos apasionados por la cultura, las personas y los paisajes rurales de Medellín y sus alrededores.</p>
+          <p class="mission"><strong>Misión:</strong> Documentar con respeto y creatividad, resaltando la identidad local y las tradiciones.</p>
+        </div>
+        <div class="about-photo">
+          <img id="about-photo" src="" alt="Equipo Latido Rural">
+        </div>
+      </div>
+    </section>
+
+    <section id="services" class="services container">
+      <h2>Servicios</h2>
+      <p class="lead">Ofrecemos distintos formatos de fotografía para proyectos y eventos. El trabajo se presenta como producto visual, cuidando composición, luz y narrativa.</p>
+      <div class="services-grid" id="services-grid">
+        <!-- Servicios será poblado dinámicamente desde /assets/images/services/ usando el patrón service-{category}.{ext} -->
+      </div>
+    </section>
+
+    <section id="portfolio" class="portfolio container">
+      <h2>Portafolio / Galería</h2>
+      <div class="filters">
+        <button data-filter="all" class="active">Todos</button>
+        <button data-filter="portraits">Retratos</button>
+        <button data-filter="landscapes">Paisajes</button>
+        <button data-filter="culture">Cultura</button>
+      </div>
+      <div class="gallery" id="gallery">
+        <!-- 30 imágenes serán inyectadas por script.js -->
+      </div>
+      <div id="modal" class="modal" aria-hidden="true">
+        <button class="modal-close" data-close aria-label="Cerrar">&times;</button>
+        <img id="modal-img" src="" alt="">
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>© Latido Rural — Fotografía cultural • Medellín</p>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>

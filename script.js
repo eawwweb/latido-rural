@@ -1,0 +1,339 @@
+// Utility
+function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+// slider: try local files in /assets/images/slider/; fallback to SVG placeholders
+(async () => {
+  const slider = document.querySelector('[data-slider]');
+  if (!slider) return;
+
+  // helper to fetch directory listing and return image URLs
+  async function fetchFilesFromDir(dirPath){
+    try{
+      const res = await fetch(dirPath);
+      if(!res.ok) return [];
+      const txt = await res.text();
+      const hrefs = Array.from(txt.matchAll(/href="([^"]+)"/g)).map(m=>m[1]);
+      const imgs = hrefs.filter(h=>/\.(jpe?g|png|webp|gif)$/i.test(h)).map(h=>{
+        if(/^https?:\/\//i.test(h)) return h;
+        const clean = h.split('?')[0].split('#')[0];
+        if(clean.startsWith('/')) return clean;
+        return (dirPath.endsWith('/')?dirPath:dirPath+'/') + clean;
+      });
+      return imgs;
+    }catch(e){ return []; }
+  }
+
+  function svgPlaceholder(w=1600,h=900,title='',sub='',bg='#bda388',fg='#ffffff'){
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}' viewBox='0 0 ${w} ${h}'><rect width='100%' height='100%' fill='${bg}'/><g font-family='Arial, Helvetica, sans-serif' fill='${fg}'><text x='40' y='120' font-size='56' font-weight='700'>${escapeHtml(title)}</text><text x='40' y='180' font-size='28' fill='rgba(255,255,255,0.9)'>${escapeHtml(sub)}</text></g></svg>`;
+    return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+  }
+
+  // look for local slider images
+  const sliderDir = '/assets/images/slider/';
+  const files = await fetchFilesFromDir(sliderDir);
+
+  let slides = [];
+  if(files.length>0){
+    // rebuild slides from local files
+    slider.innerHTML = '';
+    files.sort();
+    files.forEach(path=>{
+      const s = document.createElement('div');
+      s.className = 'slide';
+      s.style.backgroundImage = `url('${path}')`;
+      const cap = document.createElement('div'); cap.className='slide-caption';
+      cap.innerHTML = `<h2>Latido Rural</h2><p>Fotografía cultural y documental</p>`;
+      s.appendChild(cap);
+      slider.appendChild(s);
+      slides.push(s);
+    });
+    // add controls
+    const prevBtn = document.createElement('button'); prevBtn.className='slider-prev'; prevBtn.setAttribute('data-prev',''); prevBtn.setAttribute('aria-label','Anterior'); prevBtn.textContent = '<';
+    const nextBtn = document.createElement('button'); nextBtn.className='slider-next'; nextBtn.setAttribute('data-next',''); nextBtn.setAttribute('aria-label','Siguiente'); nextBtn.textContent = '>';
+    slider.appendChild(prevBtn); slider.appendChild(nextBtn);
+  } else {
+    // use existing DOM slides and placeholders
+    slides = Array.from(slider.querySelectorAll('.slide'));
+    slides.forEach((s, i)=>{
+      const title = s.getAttribute('data-title') || `Imagen ${i+1}`;
+      const sub = s.getAttribute('data-sub') || '';
+      const hue = 30 + (i*30) % 360;
+      const bg = `hsl(${hue} 30% 40%)`;
+      s.style.backgroundImage = `url('${svgPlaceholder(1600,900,title,sub,bg)}')`;
+      const cap = document.createElement('div'); cap.className='slide-caption'; cap.innerHTML = `<h2>${title}</h2><p>${sub}</p>`;
+      s.appendChild(cap);
+    });
+  }
+
+  // slider behaviour
+  let idx = 0;
+    const show = (i) => {
+      slides.forEach(s => s.classList.remove('active', 'prev', 'next'));
+      if (slides.length === 0) return;
+      const current = slides[i];
+      const prevIdx = (i - 1 + slides.length) % slides.length;
+      const nextIdx = (i + 1) % slides.length;
+      slides[prevIdx].classList.add('prev');
+      slides[nextIdx].classList.add('next');
+      current.classList.add('active');
+    };
+  show(idx);
+  const next = () => { idx = (idx+1)%slides.length; show(idx); };
+  const prev = () => { idx = (idx-1+slides.length)%slides.length; show(idx); };
+
+  // ensure prev/next buttons exist (some setups may not render them)
+  let nextBtn = slider.querySelector('[data-next]');
+  let prevBtn = slider.querySelector('[data-prev]');
+  if(!nextBtn){
+    nextBtn = document.createElement('button');
+    nextBtn.className = 'slider-next';
+    nextBtn.setAttribute('data-next','');
+    nextBtn.setAttribute('aria-label','Siguiente');
+    nextBtn.textContent = '>';
+    slider.appendChild(nextBtn);
+  }
+  if(!prevBtn){
+    prevBtn = document.createElement('button');
+    prevBtn.className = 'slider-prev';
+    prevBtn.setAttribute('data-prev','');
+    prevBtn.setAttribute('aria-label','Anterior');
+    prevBtn.textContent = '<';
+    slider.appendChild(prevBtn);
+  }
+  nextBtn.addEventListener('click', next);
+  prevBtn.addEventListener('click', prev);
+
+  // autoplay every 3 seconds
+  let auto;
+  if(slides.length > 0){
+    auto = setInterval(next, 3000);
+    slider.addEventListener('mouseenter', ()=>{ if(auto) clearInterval(auto); });
+    slider.addEventListener('mouseleave', ()=>{ if(auto) auto = setInterval(next, 3000); });
+  }
+})();
+
+// mobile nav toggle
+(function(){
+  const toggle = document.getElementById('nav-toggle');
+  if(!toggle) return;
+  toggle.addEventListener('click', ()=>{
+    document.documentElement.classList.toggle('nav-open');
+  });
+  // close nav when a link is clicked
+  document.getElementById('main-nav')?.addEventListener('click', (e)=>{
+    if(e.target.tagName==='A') document.documentElement.classList.remove('nav-open');
+  });
+})();
+
+// gallery generation and filters + modal
+(async function() {
+  const gallery = document.getElementById('gallery');
+  if (!gallery) return;
+
+  // helper: create SVG placeholder
+  function svgData(w=800,h=600,text,bg){
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}' viewBox='0 0 ${w} ${h}'><rect width='100%' height='100%' fill='${bg}'/><text x='20' y='40' font-family='Arial, Helvetica, sans-serif' font-size='28' fill='#fff'>${escapeHtml(text)}</text></svg>`;
+    return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+  }
+
+  // try to fetch directory listing and parse image files
+  async function fetchFilesFromDir(dirPath){
+    try{
+      const res = await fetch(dirPath);
+      if(!res.ok) return [];
+      const txt = await res.text();
+      // extract hrefs from directory index
+      const hrefs = Array.from(txt.matchAll(/href="([^"]+)"/g)).map(m=>m[1]);
+      // filter images and normalize to full path
+      const imgs = hrefs.filter(h=>/\.(jpe?g|png|webp|gif)$/i.test(h)).map(h=>{
+        // if href is a full url, return as is, else join with dirPath
+        if(/^https?:\/\//i.test(h)) return h;
+        // remove query/hash
+        const clean = h.split('?')[0].split('#')[0];
+        // if href is absolute path
+        if(clean.startsWith('/')) return clean;
+        // otherwise join
+        return (dirPath.endsWith('/')?dirPath:dirPath+'/') + clean;
+      });
+      return imgs;
+    }catch(e){ return []; }
+  }
+
+  // load gallery files dynamically from assets/images/gallery/
+  const galleryDir = '/assets/images/gallery/';
+  let files = await fetchFilesFromDir(galleryDir);
+  const itemsByCategory = {};
+  if(files.length>0){
+    files.sort();
+    files.forEach((path)=>{
+      const name = path.split('/').pop();
+      // match gallery-{category}-{order}.ext where category may contain hyphens
+      const m = name.match(/^gallery-([a-z0-9\-]+)-(\d+)\.[a-z]+$/i);
+      let cat = 'uncategorized';
+      let order = 99999;
+      if(m){ cat = m[1].toLowerCase(); order = parseInt(m[2],10); }
+      if(!itemsByCategory[cat]) itemsByCategory[cat]=[];
+      itemsByCategory[cat].push({src:path, order});
+    });
+    // sort each category by order
+    Object.keys(itemsByCategory).forEach(cat=>{
+      itemsByCategory[cat].sort((a,b)=>a.order - b.order);
+    });
+  } else {
+    // fallback placeholders into default categories
+    for(let i=1;i<=7;i++){
+      const cat = i%3===0?'culture':(i%3===1?'portraits':'landscapes');
+      itemsByCategory[cat] = itemsByCategory[cat]||[];
+      itemsByCategory[cat].push({src: svgData(800,600,`Imagen ${i}` , `hsl(${(i*30)%360} 40% 45%)`), order:i});
+    }
+  }
+
+  // build filter buttons dynamically from discovered categories
+  const filtersWrap = document.querySelector('.filters');
+  filtersWrap.innerHTML = '';
+  const allBtn = document.createElement('button'); allBtn.dataset.filter='all'; allBtn.className='active'; allBtn.textContent='Todos';
+  filtersWrap.appendChild(allBtn);
+  Object.keys(itemsByCategory).sort().forEach(cat=>{
+    const btn = document.createElement('button'); btn.dataset.filter=cat; btn.textContent = cat.replace(/-/g,' ');
+    filtersWrap.appendChild(btn);
+  });
+
+  // build gallery DOM from discovered items — flatten all categories and sort globally by the trailing order number
+  const galleryItems = [];
+  Object.keys(itemsByCategory).forEach(cat => {
+    itemsByCategory[cat].forEach(item => {
+      // item has {src, order}
+      galleryItems.push({ src: item.src, cat, order: (item.order||99999) });
+    });
+  });
+
+  // sort globally by order (number at filename end)
+  galleryItems.sort((a,b) => (a.order - b.order));
+
+  let indexCounter = 0;
+  galleryItems.forEach(item => {
+    indexCounter++;
+    const el = document.createElement('button');
+    el.className = 'gallery-item';
+    el.setAttribute('data-cat', item.cat);
+    el.setAttribute('aria-label', `${item.cat} photo ${indexCounter}`);
+    el.innerHTML = `<img src="${item.src}" alt="${item.cat} ${indexCounter}">`;
+
+    // press-and-hold: open modal on pointerdown, close on pointerup (release anywhere)
+    let holdActive = false;
+    let recentlyHeld = false;
+    const startHold = (e) => {
+      if(e && e.button !== undefined && e.button !== 0) return; // only primary
+      e.preventDefault?.();
+      holdActive = true;
+      openModal(item.src, `${item.cat} ${indexCounter}`);
+
+      const endHoldGlobal = (ev) => {
+        if(holdActive){
+          closeModal();
+          holdActive = false;
+          recentlyHeld = true;
+          setTimeout(()=>{ recentlyHeld = false; }, 300);
+        }
+      };
+      window.addEventListener('pointerup', endHoldGlobal, {once:true});
+      window.addEventListener('pointercancel', endHoldGlobal, {once:true});
+      window.addEventListener('touchend', endHoldGlobal, {once:true});
+      window.addEventListener('touchcancel', endHoldGlobal, {once:true});
+    };
+
+    el.addEventListener('pointerdown', startHold, {passive:false});
+    el.addEventListener('touchstart', startHold, {passive:false});
+
+    el.addEventListener('click', (e) => {
+      if(recentlyHeld){ e.preventDefault(); e.stopImmediatePropagation(); return; }
+      openModal(item.src, `${item.cat} ${indexCounter}`);
+    });
+
+    gallery.appendChild(el);
+  });
+
+  // set about photo: prefer team images from /assets/images/team/ then fallback to /assets/images/about/
+  const aboutPhoto = document.getElementById('about-photo');
+  if(aboutPhoto){
+    let aboutFiles = await fetchFilesFromDir('/assets/images/team/');
+    if(!aboutFiles || aboutFiles.length===0) aboutFiles = await fetchFilesFromDir('/assets/images/about/');
+    if(aboutFiles && aboutFiles.length>0) {
+      // prefer an image that looks like team-* if available
+      const preferred = aboutFiles.find(p => /team/i.test(p.split('/').pop())) || aboutFiles[0];
+      aboutPhoto.src = preferred;
+      aboutPhoto.alt = 'Equipo Latido Rural';
+    } else {
+      aboutPhoto.src = svgData(600,450,'Equipo Latido Rural','hsl(200 25% 45%)');
+      aboutPhoto.alt = 'Equipo Latido Rural';
+    }
+  }
+
+  // services images: populate dynamically from /assets/images/services/ using pattern service-{category}-{order}.{ext}
+  const servicesGrid = document.getElementById('services-grid');
+  const serviceFiles = await fetchFilesFromDir('/assets/images/services/');
+  if(serviceFiles.length>0 && servicesGrid){
+    // parse filenames and extract category + order. Example: service-portrait-02.jpg
+    const parsed = serviceFiles.map(path=>{
+      const name = path.split('/').pop();
+      const m = name.match(/^service-([a-z0-9\-]+)-(\d+)\.[a-z]+$/i);
+      if(m) return {src:path, cat:m[1].toLowerCase(), order: parseInt(m[2],10)};
+      const m2 = name.match(/^service-([a-z0-9\-]+)\.[a-z]+$/i);
+      if(m2) return {src:path, cat:m2[1].toLowerCase(), order: 99999};
+      return {src:path, cat:name.split('.')[0].toLowerCase(), order:99999};
+    });
+
+    // sort by order ascending so lower order wins when duplicate categories exist
+    parsed.sort((a,b)=>a.order - b.order);
+
+    // keep first occurrence per category (after sorting by order)
+    const servicesMap = new Map();
+    parsed.forEach(item=>{
+      if(!servicesMap.has(item.cat)) servicesMap.set(item.cat, item);
+    });
+
+    // build final array preserving order
+    const servicesArr = Array.from(servicesMap.values());
+
+    // render services: number of services == number of unique categories found
+    servicesGrid.innerHTML = '';
+    servicesArr.forEach(svc=>{
+      const art = document.createElement('article');
+      art.className = 'service-item';
+      const img = document.createElement('img'); img.src = svc.src; img.alt = svc.cat;
+      const h3 = document.createElement('h3'); h3.textContent = svc.cat.replace(/-/g,' ');
+      const p = document.createElement('p'); p.textContent = '';
+      art.appendChild(img); art.appendChild(h3); art.appendChild(p);
+      servicesGrid.appendChild(art);
+    });
+  } else {
+    // no local services found - leave servicesGrid empty (or you can add placeholders here)
+  }
+
+  // filters
+  const filterButtons = document.querySelectorAll('.filters button');
+  filterButtons.forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelector('.filters button.active')?.classList.remove('active');
+      btn.classList.add('active');
+      const f = btn.getAttribute('data-filter');
+      document.querySelectorAll('.gallery-item').forEach(it=>{
+        if(f==='all' || it.getAttribute('data-cat')===f) it.style.display='block'; else it.style.display='none';
+      });
+    });
+  });
+
+  // modal
+  const modal = document.getElementById('modal');
+  const modalImg = document.getElementById('modal-img');
+  const closeBtn = modal.querySelector('[data-close]');
+  function openModal(src, alt){
+    modalImg.src = src;
+    modalImg.alt = alt;
+    modal.setAttribute('aria-hidden','false');
+  }
+  function closeModal(){ modal.setAttribute('aria-hidden','true'); modalImg.src=''; }
+  closeBtn.addEventListener('click', closeModal);
+  modal.addEventListener('click', e=>{ if(e.target===modal) closeModal(); });
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeModal(); });
+})();
