@@ -24,7 +24,7 @@ function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt
   }
 
   function svgPlaceholder(w=1600,h=900,title='',sub='',bg='#bda388',fg='#ffffff'){
-    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}' viewBox='0 0 ${w} ${h}'><rect width='100%' height='100%' fill='${bg}'/><g font-family='Arial, Helvetica, sans-serif' fill='${fg}'><text x='40' y='120' font-size='56' font-weight='700'>${escapeHtml(title)}</text><text x='40' y='180' font-size='28' fill='rgba(255,255,255,0.9)'>${escapeHtml(sub)}</text></g></svg>`;
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}' viewBox='0 0 ${w} ${h}'><rect width='100%' height='100%' fill='${bg}'/><g font-family='Arial, Helvetica, sans-serif' text-anchor='middle'><text x='${w/2}' y='${h/2-40}' font-size='48' font-weight='bold' fill='${fg}' opacity='0.8'>${escapeHtml(title)}</text><text x='${w/2}' y='${h/2+40}' font-size='32' fill='${fg}' opacity='0.6'>${escapeHtml(sub)}</text></g></svg>`;
     return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
   }
 
@@ -41,9 +41,21 @@ function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt
       const s = document.createElement('div');
       s.className = 'slide';
       s.style.backgroundImage = `url('${path}')`;
-      const cap = document.createElement('div'); cap.className='slide-caption';
-      cap.innerHTML = `<h2>Latido Rural</h2><p>Fotografía cultural y documental</p>`;
-      s.appendChild(cap);
+      
+      // Añadir watermark
+      const watermark = document.createElement('img');
+      watermark.src = '/assets/images/logotipo.png';
+      watermark.alt = 'Latido Rural';
+      watermark.style.position = 'absolute';
+      watermark.style.bottom = '12px';
+      watermark.style.right = '12px';
+      watermark.style.width = '60px';
+      watermark.style.height = '60px';
+      watermark.style.opacity = '0.35';
+      watermark.style.zIndex = '10';
+      watermark.style.pointerEvents = 'none';
+      s.appendChild(watermark);
+      
       slider.appendChild(s);
       slides.push(s);
     });
@@ -60,8 +72,20 @@ function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt
       const hue = 30 + (i*30) % 360;
       const bg = `hsl(${hue} 30% 40%)`;
       s.style.backgroundImage = `url('${svgPlaceholder(1600,900,title,sub,bg)}')`;
-      const cap = document.createElement('div'); cap.className='slide-caption'; cap.innerHTML = `<h2>${title}</h2><p>${sub}</p>`;
-      s.appendChild(cap);
+      
+      // Añadir watermark
+      const watermark = document.createElement('img');
+      watermark.src = '/assets/images/logotipo.png';
+      watermark.alt = 'Latido Rural';
+      watermark.style.position = 'absolute';
+      watermark.style.bottom = '12px';
+      watermark.style.right = '12px';
+      watermark.style.width = '60px';
+      watermark.style.height = '60px';
+      watermark.style.opacity = '0.35';
+      watermark.style.zIndex = '10';
+      watermark.style.pointerEvents = 'none';
+      s.appendChild(watermark);
     });
   }
 
@@ -132,7 +156,7 @@ function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt
 
   // helper: create SVG placeholder
   function svgData(w=800,h=600,text,bg){
-    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}' viewBox='0 0 ${w} ${h}'><rect width='100%' height='100%' fill='${bg}'/><text x='20' y='40' font-family='Arial, Helvetica, sans-serif' font-size='28' fill='#fff'>${escapeHtml(text)}</text></svg>`;
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}' viewBox='0 0 ${w} ${h}'><rect width='100%' height='100%' fill='${bg}'/><text x='20' y='40' font-family='Arial, Helvetica, sans-serif' font-size='18' fill='white' opacity='0.7'>${escapeHtml(text)}</text></svg>`;
     return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
   }
 
