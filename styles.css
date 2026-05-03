@@ -18,7 +18,7 @@ html,body{margin:0;padding:0;font-family:Inter, system-ui, -apple-system, "Segoe
 .hero{position:relative;overflow:hidden;height:80vh;min-height:480px;display:flex;align-items:center;justify-content:center}
 .slider{position:relative;height:100%;min-height:480px;perspective:1400px;overflow:visible;width:100%;display:flex;align-items:center;justify-content:center}
 .slide{position:absolute;left:50%;top:50%;width:50%;height:80%;transform:translate(-50%,-50%) translateZ(-120px) scale(0.85);background-size:contain;background-position:center;background-repeat:no-repeat;background-color:transparent;transition:transform 0.6s cubic-bezier(0.25,0.46,0.45,0.94),opacity 0.6s ease,box-shadow 0.6s ease;border-radius:8px;overflow:hidden}
-.slide::after{content:'';position:absolute;bottom:12px;right:12px;width:50px;height:50px;background-image:url('/assets/images/logotipo.png');background-size:contain;background-repeat:no-repeat;background-position:center;opacity:0.25;z-index:10;pointer-events:none}
+.slide::after{content:'';position:absolute;bottom:16px;right:16px;width:60px;height:60px;background-image:url('/assets/images/logotipo.png');background-size:contain;background-repeat:no-repeat;background-position:center;opacity:0.35;z-index:10;pointer-events:none}
 .slide.active{transform:translate(-50%,-50%) translateZ(0) scale(1);width:60%;height:85%;opacity:1;box-shadow:0 60px 140px rgba(0,0,0,0.25);z-index:3;filter:none}
 .slide.prev,.slide.next{opacity:0.35;z-index:2;filter:blur(4px) brightness(.90)}
 .slide.prev{transform:translate(calc(-50% - 35%),-50%) translateZ(-60px) rotateY(12deg) scale(0.80)}
@@ -30,30 +30,28 @@ html,body{margin:0;padding:0;font-family:Inter, system-ui, -apple-system, "Segoe
   position:absolute;
   top:50%;
   transform:translateY(-50%);
-  width:48px;
-  height:48px;
+  width:52px;
+  height:52px;
   display:flex;
   align-items:center;
   justify-content:center;
-  background:rgba(255,255,255,0.15);
-  border:1px solid rgba(255,255,255,0.25);
-  box-shadow:0 2px 8px rgba(0,0,0,0.08);
+  background:rgba(255,255,255,0.35);
+  border:1.5px solid rgba(255,255,255,0.5);
+  box-shadow:0 4px 12px rgba(0,0,0,0.15);
   cursor:pointer;
   border-radius:50%;
-  color:rgba(0,0,0,0.4);
+  color:rgba(0,0,0,0.5);
   font-weight:700;
-  font-size:20px;
-  backdrop-filter:blur(3px);
-  transition:all 0.2s ease;
+  font-size:22px;
+  backdrop-filter:blur(4px);
+  transition:all 0.25s ease;
   z-index:20;
   pointer-events:auto;
-  opacity:0.4;
+  opacity:0.6;
 }
-.slider-prev{left:50%;transform:translateY(-50%) translateX(-130px)}
-.slider-next{right:50%;transform:translateY(-50%) translateX(130px)}
-.slider-prev:hover,.slider-next:hover{transform:translateY(-50%) scale(1.15);background:rgba(255,255,255,0.75);color:rgba(0,0,0,0.8);opacity:1}
-.slider-prev:hover,.slider-next:hover{left:50%;right:auto}
-.slider-next:hover{right:50%;left:auto}
+.slider-prev{left:16%}
+.slider-next{right:16%}
+.slider-prev:hover,.slider-next:hover{background:rgba(255,255,255,0.85);color:rgba(0,0,0,0.85);opacity:1;transform:translateY(-50%) scale(1.12);box-shadow:0 6px 16px rgba(0,0,0,0.25)}
 
 .about{
   margin:2.5rem auto;
@@ -118,8 +116,6 @@ html,body{margin:0;padding:0;font-family:Inter, system-ui, -apple-system, "Segoe
 @media (max-width:1000px){
   .hero{height:70vh;min-height:420px}
   .slider{min-height:420px}
-  .slider-prev{left:50%;transform:translateY(-50%) translateX(-120px)}
-  .slider-next{right:50%;transform:translateY(-50%) translateX(120px)}
 }
 
 @media (max-width:800px){
@@ -128,8 +124,8 @@ html,body{margin:0;padding:0;font-family:Inter, system-ui, -apple-system, "Segoe
   .about-photo img{margin:0 auto;max-width:94%}
   .slide{width:55%;height:75%}
   .slide.active{width:65%;height:80%}
-  .slider-prev{left:50%;transform:translateY(-50%) translateX(-110px)}
-  .slider-next{right:50%;transform:translateY(-50%) translateX(110px)}
+  .slider-prev{left:12%}
+  .slider-next{right:12%}
 }
 
 @media (max-width:900px){
