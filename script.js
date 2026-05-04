@@ -6,37 +6,25 @@ function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt
   const slider = document.querySelector('[data-slider]');
   if (!slider) return;
 
-  // helper to fetch directory listing and return image URLs
-  async function fetchFilesFromDir(dirPath){
-    try{
-      const res = await fetch(dirPath);
-      if(!res.ok) return [];
-      const txt = await res.text();
-      const hrefs = Array.from(txt.matchAll(/href="([^"]+)"/g)).map(m=>m[1]);
-      const imgs = hrefs.filter(h=>/\.(jpe?g|png|webp|gif)$/i.test(h)).map(h=>{
-        if(/^https?:\/\//i.test(h)) return h;
-        const clean = h.split('?')[0].split('#')[0];
-        if(clean.startsWith('/')) return clean;
-        return (dirPath.endsWith('/')?dirPath:dirPath+'/') + clean;
-      });
-      return imgs;
-    }catch(e){ return []; }
-  }
-
   function svgPlaceholder(w=1600,h=900,title='',sub='',bg='#bda388',fg='#ffffff'){
     const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}' viewBox='0 0 ${w} ${h}'><rect width='100%' height='100%' fill='${bg}'/><g font-family='Arial, Helvetica, sans-serif' font-size='36' font-weight='bold' fill='${fg}' text-anchor='middle'><text x='${w/2}' y='${h/2-40}'>${escapeHtml(title)}</text><text x='${w/2}' y='${h/2+40}' font-size='20' font-weight='normal'>${escapeHtml(sub)}</text></g></svg>`;
     return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
   }
 
-  // look for local slider images
-  const sliderDir = './assets/images/slider/';
-  const files = await fetchFilesFromDir(sliderDir);
+  // load slider images from index.json
+  let files = [];
+  try {
+    const res = await fetch('./assets/images/slider/index.json');
+    if (res.ok) {
+      const data = await res.json();
+      files = (data.images || []).map(img => `./assets/images/slider/${img}`);
+    }
+  } catch(e) { console.error('Error loading slider index:', e); }
 
   let slides = [];
   if(files.length>0){
     // rebuild slides from local files
     slider.innerHTML = '';
-    files.sort();
     files.forEach(path=>{
       const s = document.createElement('div');
       s.className = 'slide';
@@ -160,36 +148,19 @@ function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt
     return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
   }
 
-  // try to fetch directory listing and parse image files
-  async function fetchFilesFromDir(dirPath){
-    try{
-      const res = await fetch(dirPath);
-      if(!res.ok) return [];
-      const txt = await res.text();
-      // extract hrefs from directory index
-      const hrefs = Array.from(txt.matchAll(/href="([^"]+)"/g)).map(m=>m[1]);
-      // filter images and normalize to full path
-      const imgs = hrefs.filter(h=>/\.(jpe?g|png|webp|gif)$/i.test(h)).map(h=>{
-        // if href is a full url, return as is, else join with dirPath
-        if(/^https?:\/\//i.test(h)) return h;
-        // remove query/hash
-        const clean = h.split('?')[0].split('#')[0];
-        // if href is absolute path
-        if(clean.startsWith('/')) return clean;
-        // otherwise join
-        return (dirPath.endsWith('/')?dirPath:dirPath+'/') + clean;
-      });
-      return imgs;
-    }catch(e){ return []; }
-  }
+  // load gallery images from index.json
+  let galleryFiles = [];
+  try {
+    const res = await fetch('./assets/images/gallery/index.json');
+    if (res.ok) {
+      const data = await res.json();
+      galleryFiles = (data.images || []).map(img => `./assets/images/gallery/${img}`);
+    }
+  } catch(e) { console.error('Error loading gallery index:', e); }
 
-  // load gallery files dynamically from assets/images/gallery/
-  const galleryDir = './assets/images/gallery/';
-  let files = await fetchFilesFromDir(galleryDir);
   const itemsByCategory = {};
-  if(files.length>0){
-    files.sort();
-    files.forEach((path)=>{
+  if(galleryFiles.length>0){
+    galleryFiles.forEach((path)=>{
       const name = path.split('/').pop();
       // match gallery-{category}-{order}.ext where category may contain hyphens
       const m = name.match(/^gallery-([a-z0-9\-]+)-(\d+)\.[a-z]+$/i);
@@ -277,25 +248,24 @@ function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt
     gallery.appendChild(el);
   });
 
-  // set about photo: prefer team images from ./assets/images/team/ then fallback to ./assets/images/about/
+  // set about photo: fixed team image
   const aboutPhoto = document.getElementById('about-photo');
   if(aboutPhoto){
-    let aboutFiles = await fetchFilesFromDir('./assets/images/team/');
-    if(!aboutFiles || aboutFiles.length===0) aboutFiles = await fetchFilesFromDir('./assets/images/about/');
-    if(aboutFiles && aboutFiles.length>0) {
-      // prefer an image that looks like team-* if available
-      const preferred = aboutFiles.find(p => /team/i.test(p.split('/').pop())) || aboutFiles[0];
-      aboutPhoto.src = preferred;
-      aboutPhoto.alt = 'Equipo Latido Rural';
-    } else {
-      aboutPhoto.src = svgData(600,450,'Equipo Latido Rural','hsl(200 25% 45%)');
-      aboutPhoto.alt = 'Equipo Latido Rural';
-    }
+    aboutPhoto.src = './assets/images/team/team-01.jpg';
+    aboutPhoto.alt = 'Equipo Latido Rural';
   }
 
-  // services images: populate dynamically from ./assets/images/services/ using pattern service-{category}-{order}.{ext}
+  // services images: populate dynamically from ./assets/images/services/ using index.json
   const servicesGrid = document.getElementById('services-grid');
-  const serviceFiles = await fetchFilesFromDir('./assets/images/services/');
+  let serviceFiles = [];
+  try {
+    const res = await fetch('./assets/images/services/index.json');
+    if (res.ok) {
+      const data = await res.json();
+      serviceFiles = (data.images || []).map(img => `./assets/images/services/${img}`);
+    }
+  } catch(e) { console.error('Error loading services index:', e); }
+
   if(serviceFiles.length>0 && servicesGrid){
     // parse filenames and extract category + order. Example: service-portrait-02.jpg
     const parsed = serviceFiles.map(path=>{
@@ -331,7 +301,7 @@ function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt
       servicesGrid.appendChild(art);
     });
   } else {
-    // no local services found - leave servicesGrid empty (or you can add placeholders here)
+    // no local services found - leave servicesGrid empty
   }
 
   // filters
