@@ -1,7 +1,7 @@
 // Utility
 function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
-// slider: try local files in /assets/images/slider/; fallback to SVG placeholders
+// slider: try local files in ./assets/images/slider/; fallback to SVG placeholders
 (async () => {
   const slider = document.querySelector('[data-slider]');
   if (!slider) return;
@@ -24,12 +24,12 @@ function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt
   }
 
   function svgPlaceholder(w=1600,h=900,title='',sub='',bg='#bda388',fg='#ffffff'){
-    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}' viewBox='0 0 ${w} ${h}'><rect width='100%' height='100%' fill='${bg}'/><g font-family='Arial, Helvetica, sans-serif' text-anchor='middle'><text x='${w/2}' y='${h/2-40}' font-size='48' font-weight='bold' fill='${fg}' opacity='0.8'>${escapeHtml(title)}</text><text x='${w/2}' y='${h/2+40}' font-size='32' fill='${fg}' opacity='0.6'>${escapeHtml(sub)}</text></g></svg>`;
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}' viewBox='0 0 ${w} ${h}'><rect width='100%' height='100%' fill='${bg}'/><g font-family='Arial, Helvetica, sans-serif' font-size='36' font-weight='bold' fill='${fg}' text-anchor='middle'><text x='${w/2}' y='${h/2-40}'>${escapeHtml(title)}</text><text x='${w/2}' y='${h/2+40}' font-size='20' font-weight='normal'>${escapeHtml(sub)}</text></g></svg>`;
     return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
   }
 
   // look for local slider images
-  const sliderDir = '/assets/images/slider/';
+  const sliderDir = './assets/images/slider/';
   const files = await fetchFilesFromDir(sliderDir);
 
   let slides = [];
@@ -44,7 +44,7 @@ function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt
       
       // Añadir watermark
       const watermark = document.createElement('img');
-      watermark.src = '/assets/images/logotipo.png';
+      watermark.src = './assets/images/logotipo.png';
       watermark.alt = 'Latido Rural';
       watermark.style.position = 'absolute';
       watermark.style.bottom = '12px';
@@ -75,7 +75,7 @@ function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt
       
       // Añadir watermark
       const watermark = document.createElement('img');
-      watermark.src = '/assets/images/logotipo.png';
+      watermark.src = './assets/images/logotipo.png';
       watermark.alt = 'Latido Rural';
       watermark.style.position = 'absolute';
       watermark.style.bottom = '12px';
@@ -156,7 +156,7 @@ function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt
 
   // helper: create SVG placeholder
   function svgData(w=800,h=600,text,bg){
-    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}' viewBox='0 0 ${w} ${h}'><rect width='100%' height='100%' fill='${bg}'/><text x='20' y='40' font-family='Arial, Helvetica, sans-serif' font-size='18' fill='white' opacity='0.7'>${escapeHtml(text)}</text></svg>`;
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}' viewBox='0 0 ${w} ${h}'><rect width='100%' height='100%' fill='${bg}'/><text x='20' y='40' font-family='Arial, Helvetica, sans-serif' font-size='24' font-weight='bold' fill='rgba(255,255,255,0.8)'>${escapeHtml(text)}</text></svg>`;
     return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
   }
 
@@ -184,7 +184,7 @@ function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt
   }
 
   // load gallery files dynamically from assets/images/gallery/
-  const galleryDir = '/assets/images/gallery/';
+  const galleryDir = './assets/images/gallery/';
   let files = await fetchFilesFromDir(galleryDir);
   const itemsByCategory = {};
   if(files.length>0){
@@ -277,11 +277,11 @@ function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt
     gallery.appendChild(el);
   });
 
-  // set about photo: prefer team images from /assets/images/team/ then fallback to /assets/images/about/
+  // set about photo: prefer team images from ./assets/images/team/ then fallback to ./assets/images/about/
   const aboutPhoto = document.getElementById('about-photo');
   if(aboutPhoto){
-    let aboutFiles = await fetchFilesFromDir('/assets/images/team/');
-    if(!aboutFiles || aboutFiles.length===0) aboutFiles = await fetchFilesFromDir('/assets/images/about/');
+    let aboutFiles = await fetchFilesFromDir('./assets/images/team/');
+    if(!aboutFiles || aboutFiles.length===0) aboutFiles = await fetchFilesFromDir('./assets/images/about/');
     if(aboutFiles && aboutFiles.length>0) {
       // prefer an image that looks like team-* if available
       const preferred = aboutFiles.find(p => /team/i.test(p.split('/').pop())) || aboutFiles[0];
@@ -293,9 +293,9 @@ function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt
     }
   }
 
-  // services images: populate dynamically from /assets/images/services/ using pattern service-{category}-{order}.{ext}
+  // services images: populate dynamically from ./assets/images/services/ using pattern service-{category}-{order}.{ext}
   const servicesGrid = document.getElementById('services-grid');
-  const serviceFiles = await fetchFilesFromDir('/assets/images/services/');
+  const serviceFiles = await fetchFilesFromDir('./assets/images/services/');
   if(serviceFiles.length>0 && servicesGrid){
     // parse filenames and extract category + order. Example: service-portrait-02.jpg
     const parsed = serviceFiles.map(path=>{
