@@ -158,3 +158,23 @@ html,body{margin:0;padding:0;font-family:Inter, system-ui, -apple-system, "Segoe
   /* center caption on mobile */
   .slide-caption{display:none;left:50%;transform:translateX(-50%);bottom:1.5rem;width:calc(100% - 2rem);max-width:640px;text-align:center}
 }
+
+/* Social links in About section */
+.social-links{display:flex;gap:12px;margin-top:12px;align-items:center;justify-content:center;width:100%}
+.social-links a{display:inline-block}
+.social-icon{width:40px;height:40px;object-fit:cover;border-radius:8px;box-shadow:0 8px 20px rgba(0,0,0,0.10);transition:transform .18s ease,opacity .18s ease}
+.social-icon:hover{transform:translateY(-3px) scale(1.03);opacity:0.95}
+
+@media (max-width:600px){
+  .social-icon{width:32px;height:32px;border-radius:6px}
+}
+
+/* Footer social icons (smaller) */
+.footer-social{display:flex;gap:10px;margin-top:8px;align-items:center;justify-content:center}
+.social-icon-footer{width:26px;height:26px;object-fit:cover;border-radius:6px;box-shadow:none;opacity:0.95;transition:transform .12s ease,opacity .12s ease}
+.social-icon-footer:hover{transform:translateY(-2px) scale(1.05);opacity:1}
+
+@media (max-width:600px){
+  .social-icon-footer{width:20px;height:20px}
+}
+
