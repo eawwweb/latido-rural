@@ -266,7 +266,7 @@ function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt
     }
   } catch(e) { console.error('Error loading services index:', e); }
 
-  if(serviceFiles.length>0 && servicesGrid){
+  if(serviceFiles.length>0 && servicesGrid && servicesGrid.innerHTML.trim() === ''){
     // parse filenames and extract category + order. Example: service-portrait-02.jpg
     const parsed = serviceFiles.map(path=>{
       const name = path.split('/').pop();
@@ -290,6 +290,7 @@ function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt
     const servicesArr = Array.from(servicesMap.values());
 
     // render services: number of services == number of unique categories found
+    // Only render if servicesGrid is empty to avoid overwriting static content
     servicesGrid.innerHTML = '';
     servicesArr.forEach(svc=>{
       const art = document.createElement('article');
