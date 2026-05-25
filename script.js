@@ -214,31 +214,61 @@ function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt
     el.setAttribute('aria-label', `${item.cat} photo ${indexCounter}`);
     el.innerHTML = `<img src="${item.src}" alt="${item.cat} ${indexCounter}">`;
 
-    // press-and-hold: open modal on pointerdown, close on pointerup (release anywhere)
+    // long-press: start a timer on pointerdown, open modal only if user keeps pressing
+    // cancel the long-press if the pointer moves beyond a small threshold (i.e., user is scrolling)
     let holdActive = false;
     let recentlyHeld = false;
-    const startHold = (e) => {
-      if(e && e.button !== undefined && e.button !== 0) return; // only primary
-      e.preventDefault?.();
-      holdActive = true;
-      openModal(item.src, `${item.cat} ${indexCounter}`);
+    let longPressTimer = null;
+    const LONG_PRESS_MS = 450;
+    const MOVE_TOLERANCE = 10;
 
-      const endHoldGlobal = (ev) => {
-        if(holdActive){
-          closeModal();
-          holdActive = false;
-          recentlyHeld = true;
-          setTimeout(()=>{ recentlyHeld = false; }, 300);
+    const startHold = (e) => {
+      if(e && e.button !== undefined && e.button !== 0) return; // only primary button
+      const startX = (e.touches && e.touches[0]) ? e.touches[0].clientX : e.clientX;
+      const startY = (e.touches && e.touches[0]) ? e.touches[0].clientY : e.clientY;
+      let moved = false;
+
+      const cancelTimer = () => { if(longPressTimer){ clearTimeout(longPressTimer); longPressTimer = null; } };
+
+      const onMove = (ev) => {
+        const x = (ev.touches && ev.touches[0]) ? ev.touches[0].clientX : ev.clientX;
+        const y = (ev.touches && ev.touches[0]) ? ev.touches[0].clientY : ev.clientY;
+        if(Math.abs(x - startX) > MOVE_TOLERANCE || Math.abs(y - startY) > MOVE_TOLERANCE){
+          moved = true;
+          cancelTimer();
         }
       };
-      window.addEventListener('pointerup', endHoldGlobal, {once:true});
-      window.addEventListener('pointercancel', endHoldGlobal, {once:true});
-      window.addEventListener('touchend', endHoldGlobal, {once:true});
-      window.addEventListener('touchcancel', endHoldGlobal, {once:true});
+
+      const onUp = () => {
+        cancelTimer();
+        if(holdActive){
+          // user released after long-press: close modal
+          closeModal();
+          holdActive = false;
+        }
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+        window.removeEventListener('pointercancel', onUp);
+      };
+
+      longPressTimer = setTimeout(()=>{
+        longPressTimer = null;
+        if(!moved){
+          holdActive = true;
+          recentlyHeld = true;
+          openModal(item.src, `${item.cat} ${indexCounter}`);
+          setTimeout(()=>{ recentlyHeld = false; }, 400);
+        }
+      }, LONG_PRESS_MS);
+
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp, {once:false});
+      window.addEventListener('pointercancel', onUp, {once:false});
     };
 
-    el.addEventListener('pointerdown', startHold, {passive:false});
-    el.addEventListener('touchstart', startHold, {passive:false});
+    // prefer pointer events; pointerdown will handle touch/mouse. keep a touchstart fallback for older browsers
+    el.addEventListener('pointerdown', startHold);
+    el.addEventListener('touchstart', startHold);
 
     el.addEventListener('click', (e) => {
       if(recentlyHeld){ e.preventDefault(); e.stopImmediatePropagation(); return; }
